@@ -1,0 +1,73 @@
+{% extends "compapp/base.html" %}
+{% block title %}Results | ImageSqueeze{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h1 class="fw-bold mb-1">Your compressed images</h1>
+                <p class="text-muted mb-0">
+                    {{ batch.images.count }} file(s) &middot;
+                    saved <span class="text-success fw-semibold">{{ batch.total_savings_percent }}%</span> overall
+                    {% if batch.remove_background %}
+                        &middot; <span class="badge bg-info text-dark"><i class="bi bi-eraser"></i> Background removed</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Compress more
+                </a>
+                <a href="{% url 'download_zip' batch.id %}" class="btn btn-success">
+                    <i class="bi bi-file-earmark-zip"></i> Download all (.zip)
+                </a>
+            </div>
+        </div>
+
+        <div class="card p-3 mb-4">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Preview</th>
+                            <th>File</th>
+                            <th>Dimensions</th>
+                            <th>Original</th>
+                            <th>Compressed</th>
+                            <th>Savings</th>
+                            <th class="text-end">Download</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for image in batch.images.all %}
+                        <tr>
+                            <td>
+                                <span class="thumb-checker">
+                                    <img src="{{ image.compressed_file.url }}" alt="{{ image.original_name }}">
+                                </span>
+                            </td>
+                            <td class="fw-semibold">{{ image.original_name }}</td>
+                            <td>{{ image.width }}&times;{{ image.height }}</td>
+                            <td>{{ image.original_size_kb }} KB</td>
+                            <td>{{ image.compressed_size_kb }} KB</td>
+                            <td>
+                                <span class="badge bg-success savings-badge">
+                                    -{{ image.savings_percent }}%
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'download_single' image.id %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

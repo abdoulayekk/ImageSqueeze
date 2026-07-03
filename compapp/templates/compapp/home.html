@@ -1,0 +1,120 @@
+{% extends "compapp/base.html" %}
+{% block title %}Compress Images | ImageSqueeze{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="text-center mb-4">
+            <h1 class="fw-bold">Compress your images</h1>
+            <p class="text-muted">Upload JPG, PNG or WebP files and shrink them in seconds.</p>
+        </div>
+
+        <div class="card p-4">
+            {% if form.non_field_errors or form.images.errors %}
+                <div class="alert alert-danger">
+                    {{ form.images.errors }}
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" id="upload-form">
+                {% csrf_token %}
+
+                <label for="{{ form.images.id_for_label }}" class="drop-zone d-block mb-4" id="drop-zone">
+                    <i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
+                    <p class="mb-1 fw-semibold mt-2">Drag & drop images here</p>
+                    <p class="text-muted small mb-0">or click to browse (multiple files allowed)</p>
+                    {{ form.images }}
+                </label>
+                <div id="file-list" class="mb-4 small text-muted"></div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.quality.id_for_label }}" class="form-label fw-semibold">
+                            Quality: <span id="quality-value">{{ form.quality.value|default:70 }}</span>%
+                        </label>
+                        {{ form.quality }}
+                        <div class="form-text">Lower = smaller file, more compression.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.max_width.id_for_label }}" class="form-label fw-semibold">
+                            Max width (px)
+                        </label>
+                        {{ form.max_width }}
+                        <div class="form-text">Images wider than this get resized down.</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.output_format.id_for_label }}" class="form-label fw-semibold">
+                        Output format
+                    </label>
+                    {{ form.output_format }}
+                </div>
+
+                <div class="form-check mb-4">
+                    {{ form.remove_background }}
+                    <label for="{{ form.remove_background.id_for_label }}" class="form-check-label fw-semibold">
+                        <i class="bi bi-eraser"></i> Remove background
+                    </label>
+                    <div class="form-text">
+                        Cuts out the subject and makes the background transparent.
+                        Output will be saved as PNG to preserve transparency, even if
+                        JPEG is selected above.
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-arrow-down-circle"></i> Compress Images
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('{{ form.images.id_for_label }}');
+    const fileList = document.getElementById('file-list');
+    const qualityInput = document.getElementById('{{ form.quality.id_for_label }}');
+    const qualityValue = document.getElementById('quality-value');
+
+    qualityInput.addEventListener('input', () => {
+        qualityValue.textContent = qualityInput.value;
+    });
+
+    function renderFileList() {
+        if (!fileInput.files.length) {
+            fileList.innerHTML = '';
+            return;
+        }
+        const names = Array.from(fileInput.files).map(f => f.name);
+        fileList.innerHTML = '<strong>' + names.length + ' file(s) selected:</strong> ' + names.join(', ');
+    }
+
+    fileInput.addEventListener('change', renderFileList);
+
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        fileInput.files = e.dataTransfer.files;
+        renderFileList();
+    });
+</script>
+{% endblock %}
